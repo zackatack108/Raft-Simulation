@@ -26,8 +26,6 @@ jobs:
           docker compose up -d --build
           sleep 10
           docker compose exec zack-test dotnet test
-          sleep 5
-          docker compose exec --exit-code-from zack-test
 
       - name: Clean up Tests
         if: always()
