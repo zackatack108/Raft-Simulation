@@ -14,15 +14,20 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
+
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
           dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
       - name: Set up Tests
         run: |
           cd Testing
           docker compose up -d --build
-          sleep 30
+          sleep 10
+          docker compose exec zack-test dotnet test
+          sleep 10
+          docker compose exec --exit-code-from zack-test
 
       - name: Clean up Tests
         if: always()

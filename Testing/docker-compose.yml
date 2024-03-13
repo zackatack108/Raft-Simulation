@@ -58,7 +58,7 @@ services:
     build:
       context: ..
       dockerfile: ./Gateway-API/Test.Dockerfile
-    command: dotnet test
+    command: tail -f /dev/null
     ports:
       - 1304:8080
     networks:
