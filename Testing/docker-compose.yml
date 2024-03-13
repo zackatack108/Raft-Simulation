@@ -10,12 +10,11 @@ services:
     build:
       context: ..
       dockerfile: ./Gateway-API/Test.Dockerfile
-    command: tail -f /dev/null
     ports:
       - 1299:8080
     networks:
       - zack-test-raft
-      
+
   zack-test-gateway-api:
     container_name: zack-test-gateway-api
     build:
