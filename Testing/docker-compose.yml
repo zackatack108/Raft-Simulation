@@ -18,6 +18,10 @@ services:
       - 1300:8080
     networks:
       - zack-test-raft
+    depends_on:
+      - zack-test-node-api-1
+      - zack-test-node-api-2
+      - zack-test-node-api-3
 
   zack-test-node-api-1:
     container_name: zack-test-node-api-1
