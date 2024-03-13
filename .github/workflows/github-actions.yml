@@ -3,7 +3,7 @@ run-name: ${{github.actor}} is pushing a new version of raft
 on: [push, workflow_dispatch]
 
 env:
-  DOTNET_CORE_VERSION: 8.0.x
+  DOTNET_CORE_VERSION: 8.0.102
   CONFIGURATION: Release
   GATEWAY_API_WORKING_DIRECTORY: Gateway-API
   NODE_API_WORKING_DIRECTORY: Node-API
