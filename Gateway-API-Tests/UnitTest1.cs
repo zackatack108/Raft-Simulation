@@ -11,7 +11,7 @@ public class Tests
     public void Setup()
     {
         client = new HttpClient();
-        client.BaseAddress = new Uri("http://localhost:1300");
+        client.BaseAddress = new Uri("http://zack-test-gateway-api:8080");
     }
 
     [Test]
