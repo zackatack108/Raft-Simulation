@@ -1,9 +1,9 @@
-name: Zach Raft Actions
+name: Zack Raft Actions
 run-name: ${{github.actor}} is pushing a new version of raft
 on: [push, workflow_dispatch]
 
 env:
-  DOTNET_CORE_VERSION: 8.0.102
+  DOTNET_CORE_VERSION: 8.0.x
   CONFIGURATION: Release
   GATEWAY_API_WORKING_DIRECTORY: Gateway-API
   NODE_API_WORKING_DIRECTORY: Node-API
@@ -23,7 +23,7 @@ jobs:
           cd Testing
           docker compose up -d --build
           sleep 5
-          docker compose exec -T zack-test-gateway-api dotnet test
+          docker compose exec -T zack-test dotnet test
 
       - name: Clean up Tests
         if: always()
