@@ -10,10 +10,16 @@ services:
     build:
       context: ..
       dockerfile: ./Gateway-API/Test.Dockerfile
+    command: dotnet test
     ports:
       - 1299:8080
     networks:
       - zack-test-raft
+  depends_on:
+    - zack-test-gateway-api
+    - zack-test-node-api-1
+    - zack-test-node-api-2
+    - zack-test-node-api-3
 
   zack-test-gateway-api:
     container_name: zack-test-gateway-api

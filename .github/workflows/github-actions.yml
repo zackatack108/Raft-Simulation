@@ -23,7 +23,6 @@ jobs:
           cd Testing
           docker compose up -d --build
           sleep 5
-          docker compose exec -T zack-test dotnet test
 
       - name: Clean up Tests
         if: always()
