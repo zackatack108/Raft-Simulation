@@ -25,7 +25,9 @@ jobs:
           cd Testing
           docker compose up -d --build
           sleep 10
-          docker compose exec zack-test dotnet test --exit-code-from zack-test
+          docker compose exec zack-test bash -c "cd ../Gateway-API-Tests && dotnet test --project Gateway-API-Tests.csproj --exit-code-from zack-test"
+          sleep 5
+          docker compose exec --exit-code-from zack-test
 
       - name: Clean up Tests
         if: always()
