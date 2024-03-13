@@ -10,6 +10,7 @@ services:
     build:
       context: ..
       dockerfile: ./Gateway-API/Dockerfile
+    command: tail -f /dev/null
     environment:
       NODE_ONE: "zack-test-node-api-1:8080"
       NODE_TWO: "zack-test-node-api-2:8080"

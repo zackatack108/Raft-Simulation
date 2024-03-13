@@ -1,5 +1,5 @@
 name: Zach Raft Actions
-run-name: ${{github.actor}} is pushinc a new version of raft
+run-name: ${{github.actor}} is pushing a new version of raft
 on: [push, workflow_dispatch]
 
 env:
