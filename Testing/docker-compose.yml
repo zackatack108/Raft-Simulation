@@ -1,0 +1,50 @@
+version: '3'
+
+networks:
+  zack-test-raft:
+    driver: bridge
+
+services:
+  zack-test-gateway-api:
+    container_name: zack-test-gateway-api
+    build:
+      context: ..
+      dockerfile: ./Gateway-API/Dockerfile
+    environment:
+      NODE_ONE: "zack-test-node-api-1:8080"
+      NODE_TWO: "zack-test-node-api-2:8080"
+      NODE_THREE: "zack-test-node-api-3:8080"
+    ports:
+      - 1300:8080
+    networks:
+      - zack-test-raft
+
+  zack-test-node-api-1:
+    container_name: zack-test-node-api-1
+    build:
+      context: ..
+      dockerfile: ./Node-API/Dockerfile
+    ports:
+      - 1301:8080
+    networks:
+      - zack-test-raft
+
+  zack-test-node-api-2:
+    container_name: zack-test-node-api-2
+    build:
+      context: ..
+      dockerfile: ./Node-API/Dockerfile
+    ports:
+      - 1302:8080
+    networks:
+      - zack-test-raft
+
+  zack-test-node-api-3:
+    container_name: zack-test-node-api-3
+    build:
+      context: ..
+      dockerfile: ./Node-API/Dockerfile
+    ports:
+      - 1303:8080
+    networks:
+      - zack-test-raft
