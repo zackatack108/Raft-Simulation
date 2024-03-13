@@ -5,22 +5,6 @@ networks:
     driver: bridge
 
 services:
-  zack-test:
-    container_name: zack-test
-    build:
-      context: ..
-      dockerfile: ./Gateway-API/Test.Dockerfile
-    command: dotnet test
-    ports:
-      - 1299:8080
-    networks:
-      - zack-test-raft
-  depends_on:
-    - zack-test-gateway-api
-    - zack-test-node-api-1
-    - zack-test-node-api-2
-    - zack-test-node-api-3
-
   zack-test-gateway-api:
     container_name: zack-test-gateway-api
     build:
@@ -64,3 +48,19 @@ services:
       - 1303:8080
     networks:
       - zack-test-raft
+
+  zack-test:
+    container_name: zack-test
+    build:
+      context: ..
+      dockerfile: ./Gateway-API/Test.Dockerfile
+    command: dotnet test
+    ports:
+      - 1304:8080
+    networks:
+      - zack-test-raft
+  depends_on:
+    - zack-test-gateway-api
+    - zack-test-node-api-1
+    - zack-test-node-api-2
+    - zack-test-node-api-3

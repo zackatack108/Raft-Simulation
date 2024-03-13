@@ -22,7 +22,7 @@ jobs:
         run: |
           cd Testing
           docker compose up -d --build
-          sleep 5
+          sleep 30
 
       - name: Clean up Tests
         if: always()
