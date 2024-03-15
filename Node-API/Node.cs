@@ -2,18 +2,19 @@
 
 public class Node
 {
-    private readonly string node;
-    private readonly List<string> otherNodes;
-    private readonly int totalNodes;
+    private string node;
+    private List<string> otherNodes;
+    private int totalNodes;
 
-    public bool IsLeader { get; set; }
-    public bool IsFollower { get; set; }
-    public bool IsCandidate { get; set; }
-    public string CurrentLeader { get; set; }
-    public int VoteCount { get; set; }
-    public int CurrentTerm { get; set; }
+    public bool IsLeader { get; set; } = false;
+    public bool IsFollower { get; set; } = false;
+    public bool IsCandidate { get; set; } = false;
+    public string CurrentLeader { get; set; } = "None";
+    public int VoteCount { get; set; } = 0;
+    public int CurrentTerm { get; set; } = 0;
+    public DateTime LastHeartbeatTime { get; set; }
 
-    public Node(IConfiguration configuration, ILogger<Node> logger)
+    public Node(IConfiguration configuration)
     {
         node = configuration["NODE_ONE"] ?? "";
         otherNodes = 
@@ -22,7 +23,6 @@ public class Node
             configuration["NODE_THREE"] ?? ""
         ];
         totalNodes = otherNodes.Count;
-        logger.LogInformation($"Node 1: {node}, Node 2: {otherNodes[0]}, Node 3: {otherNodes[1]}");
     }
 
     public List<string> OtherNodes()

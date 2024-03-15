@@ -2,8 +2,8 @@
 
 public class ElectionHandler
 {
-    private readonly Node node;
-    private readonly LogHandler logHandler;
+    private Node node;
+    private LogHandler logHandler;
     private ILogger<ElectionHandler> logger;
 
     public ElectionHandler(Node node, LogHandler logHandler, ILogger<ElectionHandler> logger)
@@ -28,7 +28,7 @@ public class ElectionHandler
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    string uri = $"http://{otherNode}/Election/VoteFor?node={node.ThisNode()}&term={node.CurrentTerm}";
+                    string uri = $"http://{otherNode}/Election/VoteFor?candidate={node.ThisNode()}&term={node.CurrentTerm}";
                     client.BaseAddress = new Uri(uri);
 
                     HttpResponseMessage response = await client.GetAsync("");

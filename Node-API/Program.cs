@@ -20,6 +20,11 @@ builder.Services.AddSingleton<RaftHandler>();
 
 var app = builder.Build();
 
+var node = app.Services.GetRequiredService<Node>();
+
+var raftHandler = app.Services.GetRequiredService<RaftHandler>();
+raftHandler.Initialize();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

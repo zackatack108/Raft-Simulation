@@ -4,27 +4,32 @@ namespace Node_API.Util;
 
 public class RaftHandler
 {
-    private readonly Node node;
-    private readonly ElectionHandler electionHandler;
-    private readonly LogHandler logHandler;
-    private readonly ILogger<RaftHandler> logger;
-    private readonly Random random = new Random();
-    private readonly TimeSpan minHeartBeatInterval = TimeSpan.FromSeconds(5);
+    private Node node;
+    private ElectionHandler electionHandler;
+    private LogHandler logHandler;
+    private ILogger<RaftHandler> logger;
+    private Random random = new Random();
+    private TimeSpan minHeartBeatInterval = TimeSpan.FromSeconds(1000);
 
     public RaftHandler(Node node, ElectionHandler electionHandler, LogHandler logHandler, ILogger<RaftHandler> logger)
     {
         this.node = node;
         this.electionHandler = electionHandler;
         this.logHandler = logHandler;
-        this.logger = logger;
-        StartElectionIfNoResponse();
-        _ = StartPulse();
+        this.logger = logger;     
+    }
+
+    public void Initialize()
+    {
+        Task.Run(StartPulse);
+        this.logger.LogInformation("Raft handler Initialized");
     }
 
     public async Task StartPulse()
     {
         while (true)
         {
+
             if (node.IsLeader)
             {
                 var otherNodes = node.OtherNodes();
@@ -34,50 +39,48 @@ public class RaftHandler
                     {
                         using (HttpClient client = new HttpClient())
                         {
-                            string uri = $"http://{otherNode}/Raft/HeartBeat";
+                            string uri = $"http://{otherNode}/Raft/HeartBeat?leaderNode={node.ThisNode()}&term={node.CurrentTerm}";
                             client.BaseAddress = new Uri(uri);
 
-                            HttpResponseMessage response = await client.GetAsync("");
+                            HttpResponseMessage response = await client.PostAsync("", null);
                             response.EnsureSuccessStatusCode();
                         }
+                        logger.LogInformation($"Node: {node.ThisNode()}, Sent Heartbeat to node: {otherNode}, Term: {node.CurrentTerm}");
                     }
                     catch (Exception ex)
                     {
-                        logger.LogError(ex.Message);
+                        logger.LogError($"Error sending heartbeat - {ex.Message}");
                     }
                 }
             }
 
-            Thread.Sleep(random.Next(500, 2500));
+            StartElectionIfNoResponse();
+
+            //logger.LogInformation($"Node: {node.ThisNode()}, Leader: {node.CurrentLeader}, Follower: {node.IsFollower}");
+            Thread.Sleep(random.Next(2000,10000));
         }
     }
 
     public void StartElectionIfNoResponse()
     {
-        int randomTimeout = random.Next(5000, 10000);
-        Thread.Sleep(randomTimeout);
-
-        if(!node.IsLeader && node.IsCandidate)
+        if(!node.IsLeader && DateTime.UtcNow - node.LastHeartbeatTime > TimeSpan.FromSeconds(random.Next(5,10)))
         {
-            logger.LogInformation($"Node: {node.ThisNode} started an election for term {node.CurrentTerm}");
+            logger.LogInformation($"Node: {node.ThisNode()} detected leader {node.CurrentLeader} is unavailable. Starting election for term {node.CurrentTerm + 1}");
             electionHandler.StartElection();
         }
     }
 
-    public void OnLeaderHeartbeatReceived(string leader)
+    public void OnLeaderHeartbeatReceived(string leader, int term)
     {
-        if (!node.IsLeader)
-        {
-            logger.LogInformation($"Node: {node.ThisNode} received heartbeat from {leader}");
-            node.CurrentLeader = leader;
+        logger.LogInformation($"Node: {node.ThisNode()} received heartbeat from {leader} for term {term}");
+        node.CurrentLeader = leader;
+        node.CurrentTerm = term;
 
-            node.IsLeader = false;
-            node.IsCandidate = false;
-            node.IsFollower = true;
+        node.IsLeader = false;
+        node.IsCandidate = false;
+        node.IsFollower = true;
 
-            Thread heartBeatResetThread = new Thread(StartElectionIfNoResponse);
-            heartBeatResetThread.Start();
-        }
+        node.LastHeartbeatTime = DateTime.UtcNow;
     }
 
 }

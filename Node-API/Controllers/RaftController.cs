@@ -8,9 +8,9 @@ namespace Node_API.Controllers;
 [Route("[controller]")]
 public class RaftController : Controller
 {
-    private readonly RaftHandler raftHandler;
-    private readonly LogHandler logHandler;
-    private readonly Node node;
+    private RaftHandler raftHandler;
+    private LogHandler logHandler;
+    private Node node;
 
     public RaftController(Node node, RaftHandler raftHandler, LogHandler logHandler)
     {
@@ -112,9 +112,9 @@ public class RaftController : Controller
     }
 
     [HttpPost("HeartBeat")]
-    public void ReceivedHeartbeat(string leaderNode)
+    public void ReceivedHeartbeat(string leaderNode, int term)
     {
-        raftHandler.OnLeaderHeartbeatReceived(leaderNode);
+        raftHandler.OnLeaderHeartbeatReceived(leaderNode, term);
     }
 
 }
