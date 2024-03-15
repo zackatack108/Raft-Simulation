@@ -4,6 +4,11 @@ networks:
   zack-raft:
     driver: bridge
 
+volumes:
+  node1: {}
+  node2: {}
+  node3: {}
+
 services:
   zack-gateway-api:
     container_name: zack-gateway-api
@@ -21,30 +26,72 @@ services:
 
   zack-node-api-1:
     container_name: zack-node-api-1
+    user: 0:0
+    entrypoint:
+      - /bin/bash
+      - -c 
+      - |
+        chown -R 1000:1000 /Logs
+        su app
+        dotnet Node-API.dll
     build:
       context: ..
       dockerfile: ./Node-API/Dockerfile
+    environment:
+      NODE_ONE: "zack-node-api-1:8080"
+      NODE_TWO: "zack-node-api-2:8080"
+      NODE_THREE: "zack-node-api-3:8080"
     ports:
       - 1401:8080
+    volumes:
+      - node1:/Logs
     networks:
       - zack-raft
 
   zack-node-api-2:
     container_name: zack-node-api-2
+    user: 0:0
+    entrypoint:
+      - /bin/bash
+      - -c 
+      - |
+        chown -R 1000:1000 /Logs
+        su app
+        dotnet Node-API.dll
     build:
       context: ..
       dockerfile: ./Node-API/Dockerfile
+    environment:
+      NODE_ONE: "zack-node-api-2:8080"
+      NODE_TWO: "zack-node-api-1:8080"
+      NODE_THREE: "zack-node-api-3:8080"
     ports:
       - 1402:8080
+    volumes:
+      - node2:/Logs
     networks:
       - zack-raft
 
   zack-node-api-3:
     container_name: zack-node-api-3
+    user: 0:0
+    entrypoint:
+      - /bin/bash
+      - -c 
+      - |
+        chown -R 1000:1000 /Logs
+        su app
+        dotnet Node-API.dll
+    environment:
+      NODE_ONE: "zack-node-api-3:8080"
+      NODE_TWO: "zack-node-api-2:8080"
+      NODE_THREE: "zack-node-api-1:8080"
     build:
       context: ..
       dockerfile: ./Node-API/Dockerfile
     ports:
       - 1403:8080
+    volumes:
+      - node3:/Logs
     networks:
       - zack-raft

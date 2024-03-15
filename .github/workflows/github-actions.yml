@@ -9,8 +9,8 @@ env:
   NODE_API_WORKING_DIRECTORY: Node-API
 
 jobs:
-  Test-Then-Deploy:
-    runs-on: self-hosted
+  Test-On-Office-1:
+    runs-on: office-1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -33,11 +33,41 @@ jobs:
           cd Testing
           docker compose down --remove-orphans --volumes
 
+      # - name: Ensure Formatting
+      #   run: dotnet format --verify-no-changes --verbosity diagnostic
+
+  Deploy-On-Office-1:
+    runs-on: office-1
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
       - name: Set Up Production
         run: |
           cd Production
           docker compose down --remove-orphans
           docker compose up -d --build
 
-      # - name: Ensure Formatting
-      #   run: dotnet format --verify-no-changes --verbosity diagnostic
+  Deploy-On-Office-2:
+    runs-on: office-2
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+
+      - name: Set Up Production
+        run: |
+          cd Production
+          docker compose down --remove-orphans
+          docker compose up -d --build
+
+      
