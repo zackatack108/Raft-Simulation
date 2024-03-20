@@ -26,14 +26,15 @@ public class ElectionController : Controller
     {
         bool vote = false;
         string message = $"Node: {node.ThisNode()}, Didn't vote for: {candidate}, Term: {term}";
-        (string, object, int) logMessage = (message, false, 1);
+        string logMessage = $"Didn't vote {candidate}";
         if(term > node.CurrentTerm)
         {
             node.CurrentTerm = term;
             string voteMessage = $"Node: {node.ThisNode()}, Voted for node: {candidate}, Term: {term}";
-            (string, object, int) voteLogMessage = (voteMessage, true, 1);
 
-            if(!logHandler.LogExists(voteLogMessage, FileType.ELECTION) && !logHandler.LogExists(logMessage, FileType.ELECTION))
+            var log = logHandler.GetLogEntry(node.ThisNode(), FileType.ELECTION, term);
+
+            if(log != null)
             {
                 int randomNumber = random.Next(10);
 
@@ -41,13 +42,13 @@ public class ElectionController : Controller
                 {
                     vote = true;
                     message = voteMessage;
-                    logMessage = voteLogMessage;
+                    logMessage = $"Voted {candidate}";
                 }
             }
         }
 
         logger.LogInformation(message);
-        logHandler.WriteLog(logMessage, FileType.ELECTION);
+        logHandler.AppendLogEntry(term, node.ThisNode(), logMessage, FileType.ELECTION);
         return vote;
     }
 }

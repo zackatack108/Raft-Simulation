@@ -22,8 +22,12 @@ var app = builder.Build();
 
 var node = app.Services.GetRequiredService<Node>();
 
+var logHandler = app.Services.GetRequiredService<LogHandler>();
+logHandler.Initialize();
+
 var raftHandler = app.Services.GetRequiredService<RaftHandler>();
 raftHandler.Initialize();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

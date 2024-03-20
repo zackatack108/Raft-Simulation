@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Node_API.Util;
 
@@ -25,23 +26,22 @@ public class RaftController : Controller
         return "Pong";
     }
 
-    [HttpGet("GetItem")]
-    public object GetItem(string key)
+    [HttpGet("GetLogEntry")]
+    public RaftLogEntry GetLogEntry(string nodeID, int? term)
     {
-        return logHandler.GetLogItem(key, FileType.NORMAL);
-    }
-
-    [HttpGet("GetItemWithVersion")]
-    public (object, int) GetItemWithVersion(string key)
-    {
-        return logHandler.GetLogItemWithVersion(key, FileType.NORMAL);
+        return logHandler.GetLogEntry(nodeID, FileType.NORMAL, term);
     }
 
     [HttpGet("StrongGetItem")]
-    public async Task<object> StrongGetItem(string key)
+    public async Task<RaftLogEntry> StrongGetItem(string nodeID)
     {
-        List<(object Value, int Version)> items = new();
-        items.Add(logHandler.GetLogItemWithVersion(key, FileType.NORMAL));
+        List<RaftLogEntry> items = new();
+        RaftLogEntry item = logHandler.GetLogEntry(nodeID, FileType.NORMAL, null);
+        
+        if(item != null)
+        {
+            items.Add(item);
+        }
 
         var otherNodes = node.OtherNodes();
         foreach (var otherNode in otherNodes)
@@ -50,13 +50,13 @@ public class RaftController : Controller
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    string uri = $"http://{otherNode}/Raft/GetItemWithVersion?key={key}";
+                    string uri = $"http://{otherNode}/Raft/GetLogEntry?nodeID={nodeID}";
                     client.BaseAddress = new Uri(uri);
 
                     HttpResponseMessage response = await client.GetAsync("");
                     response.EnsureSuccessStatusCode();
 
-                    var responseBody = await response.Content.ReadFromJsonAsync<(object, int)>();
+                    var responseBody = await response.Content.ReadFromJsonAsync<RaftLogEntry>();
                     items.Add(responseBody);                    
                 }
             }
@@ -65,50 +65,54 @@ public class RaftController : Controller
             }
         }
 
-        (object Value, int Version) strongestItem = default;
-        foreach(var item in items)
+        RaftLogEntry strongestItem = default;
+        foreach(var i in items)
         {
-            if (item.Version > strongestItem.Version)
+            if (strongestItem == null || i.Term > strongestItem.Term)
             {
-                strongestItem = item;
+                strongestItem = i;
             }
         }
 
-        return strongestItem.Value;
+        return strongestItem;
     }
 
     [HttpPost("SaveItem")]
-    public async Task SaveItem(string key, object value)
+    public async Task SaveItem(int term, string nodeID, object command)
     {
         if (node.IsLeader)
         {
-            (string, object, int) item = (key, value, 1);
-            logHandler.WriteLog(item, FileType.NORMAL);
+            logHandler.AppendLogEntry(term, nodeID, command, FileType.NORMAL);
         }
         else
         {
-            try
-            {
-                using (HttpClient client = new HttpClient())
-                {
-                    string uri = $"http://{node.CurrentLeader}/Raft/SaveItem?key={key}&object={value}";
-                    client.BaseAddress = new Uri(uri);
-
-                    HttpResponseMessage response = await client.PostAsync("", null);
-                    response.EnsureSuccessStatusCode();
-                }
-            }
-            catch (Exception ex)
-            {
-            }
+            await ForwardSaveItem(term, nodeID, command);
         }
 
     }
 
-    [HttpPost("UpdateLog")]
-    public void UpdateLog((string, object, int) logEntry)
+    private async Task ForwardSaveItem(int term, string nodeID, object command)
     {
-        logHandler.WriteLog(logEntry, FileType.NORMAL);
+        try
+        {
+            using (HttpClient client = new HttpClient())
+            {
+                string uri = $"http://{node.CurrentLeader}/Raft/SaveItem?term={term}&nodeID={nodeID}&command={command}";
+                client.BaseAddress = new Uri(uri);
+
+                HttpResponseMessage response = await client.PostAsync("", null);
+                response.EnsureSuccessStatusCode();
+            }
+        }
+        catch (Exception ex)
+        {
+        }
+    }
+
+    [HttpPost("UpdateLog")]
+    public void UpdateLog(int term, string nodeID, object command)
+    {
+        logHandler.AppendLogEntry(term, nodeID, command, FileType.NORMAL);
     }
 
     [HttpPost("HeartBeat")]

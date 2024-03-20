@@ -46,6 +46,7 @@ public class RaftHandler
                             response.EnsureSuccessStatusCode();
                         }
                         logger.LogInformation($"Node: {node.ThisNode()}, Sent Heartbeat to node: {otherNode}, Term: {node.CurrentTerm}");
+                        logHandler.AppendLogEntry(node.CurrentTerm, node.ThisNode(), "Sent Heartbeat", FileType.NORMAL);
                     }
                     catch (Exception ex)
                     {
@@ -66,6 +67,7 @@ public class RaftHandler
         if(!node.IsLeader && DateTime.UtcNow - node.LastHeartbeatTime > TimeSpan.FromSeconds(random.Next(5,10)))
         {
             logger.LogInformation($"Node: {node.ThisNode()} detected leader {node.CurrentLeader} is unavailable. Starting election for term {node.CurrentTerm + 1}");
+            logHandler.AppendLogEntry(node.CurrentTerm + 1, node.ThisNode(), "Started Election", FileType.NORMAL);
             electionHandler.StartElection();
         }
     }
@@ -73,6 +75,7 @@ public class RaftHandler
     public void OnLeaderHeartbeatReceived(string leader, int term)
     {
         logger.LogInformation($"Node: {node.ThisNode()} received heartbeat from {leader} for term {term}");
+        logHandler.AppendLogEntry(term, node.ThisNode(), "Received Heartbeat", FileType.NORMAL);
         node.CurrentLeader = leader;
         node.CurrentTerm = term;
 

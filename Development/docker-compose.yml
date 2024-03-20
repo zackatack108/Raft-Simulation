@@ -5,9 +5,9 @@ networks:
     driver: bridge
 
 volumes:
-  node1: {}
-  node2: {}
-  node3: {}
+  node-1-logs: {}
+  node-2-logs: {}
+  node-3-logs: {}
 
 services:
   zack-gateway-api:
@@ -31,9 +31,10 @@ services:
       - /bin/bash
       - -c 
       - |
-        chown -R 1000:1000 /Logs
-        su app
-        dotnet Node-API.dll
+        mkdir -p /app/RaftLogs
+        chown -R app:app /app/RaftLogs
+        chmod -R 755 /app/RaftLogs
+        su app -c "dotnet Node-API.dll"
     build:
       context: ..
       dockerfile: ./Node-API/Dockerfile
@@ -44,7 +45,7 @@ services:
     ports:
       - 1401:8080
     volumes:
-      - node1:/Logs
+    - node-1-logs:/app/RaftLogs
     networks:
       - zack-raft
 
@@ -55,9 +56,10 @@ services:
       - /bin/bash
       - -c 
       - |
-        chown -R 1000:1000 /Logs
-        su app
-        dotnet Node-API.dll
+        mkdir -p /app/RaftLogs
+        chown -R app:app /app/RaftLogs
+        chmod -R 755 /app/RaftLogs
+        su app -c "dotnet Node-API.dll"
     build:
       context: ..
       dockerfile: ./Node-API/Dockerfile
@@ -68,7 +70,7 @@ services:
     ports:
       - 1402:8080
     volumes:
-      - node2:/Logs
+    - node-2-logs:/app/RaftLogs
     networks:
       - zack-raft
 
@@ -79,9 +81,10 @@ services:
       - /bin/bash
       - -c 
       - |
-        chown -R 1000:1000 /Logs
-        su app
-        dotnet Node-API.dll
+        mkdir -p /app/RaftLogs
+        chown -R app:app /app/RaftLogs
+        chmod -R 755 /app/RaftLogs
+        su app -c "dotnet Node-API.dll"
     environment:
       NODE_ONE: "zack-node-api-3:8080"
       NODE_TWO: "zack-node-api-2:8080"
@@ -92,6 +95,6 @@ services:
     ports:
       - 1403:8080
     volumes:
-      - node3:/Logs
+    - node-3-logs:/app/RaftLogs
     networks:
       - zack-raft

@@ -53,7 +53,6 @@ public class ElectionHandler
     public void CheckElection()
     {
         int votesNeeded = (node.TotalNodes() / 2) + 1;
-        (string, object, int) logMessage;
         string message = "";
         if(node.VoteCount >= votesNeeded)
         {
@@ -61,19 +60,17 @@ public class ElectionHandler
             node.IsLeader = true;
             node.IsCandidate = false;
             node.IsFollower = false;
-            message = $"Node: {node.ThisNode()} elected for term: {node.CurrentTerm}";
-            logMessage = (message, true, 1);
+            message = "Elected";
         }
         else
         {
             node.IsLeader = false;
             node.IsCandidate = false;
             node.IsFollower = true;
-            message = $"Node: {node.ThisNode()} not elected for term: {node.CurrentTerm}";
-            logMessage = (message, false, 1);
+            message = $"Not Elected";
         }
         logger.LogInformation(message);
-        logHandler.WriteLog(logMessage, FileType.ELECTION);
+        logHandler.AppendLogEntry(node.CurrentTerm, node.ThisNode(), message, FileType.ERROR);
     }
 
 }
