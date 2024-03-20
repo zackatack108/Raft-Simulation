@@ -1,0 +1,27 @@
+﻿@page "/User"
+@using Services
+@inject APIService apiService
+
+<PageTitle>User</PageTitle>
+
+<div class="d-flex">
+    <label for="name">Name</label>
+    <InputText id="name" @bind-Value="name"/>
+</div>
+
+<div class="d-flex">
+    <label for="depositAmount">Deposit Amount</label>
+    <InputNumber id="depositAmount" @bind-Value="depositAmount" />
+</div>
+
+<button class="btn btn-primary" @onclick="AddMoney">Deposit</button>
+
+@code {
+    string name = "";
+    decimal depositAmount = 0.00M;
+
+    private async Task AddMoney()
+    {
+        await apiService.AddMoney(name, depositAmount);
+    }
+}
