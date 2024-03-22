@@ -1,4 +1,5 @@
 ﻿@page "/User"
+@using RaftShared
 @using Services
 @inject APIService apiService
 
@@ -22,6 +23,7 @@
 
     private async Task AddMoney()
     {
-        await apiService.AddMoney(name, depositAmount);
+        RaftItem raftItem = new RaftItem { Key = $"balance-of {name}", Value = depositAmount };
+        await apiService.SaveItem(raftItem);
     }
 }

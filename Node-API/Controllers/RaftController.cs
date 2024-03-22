@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Node_API.Util;
+using RaftShared;
 
 namespace Node_API.Controllers;
 
@@ -37,8 +38,8 @@ public class RaftController : Controller
     {
         List<RaftLogEntry> items = new();
         RaftLogEntry item = logHandler.GetLogEntry(nodeID, FileType.NORMAL, null);
-        
-        if(item != null)
+
+        if (item != null)
         {
             items.Add(item);
         }
@@ -57,7 +58,7 @@ public class RaftController : Controller
                     response.EnsureSuccessStatusCode();
 
                     var responseBody = await response.Content.ReadFromJsonAsync<RaftLogEntry>();
-                    items.Add(responseBody);                    
+                    items.Add(responseBody);
                 }
             }
             catch (Exception ex)
@@ -66,7 +67,7 @@ public class RaftController : Controller
         }
 
         RaftLogEntry strongestItem = default;
-        foreach(var i in items)
+        foreach (var i in items)
         {
             if (strongestItem == null || i.Term > strongestItem.Term)
             {
@@ -77,8 +78,25 @@ public class RaftController : Controller
         return strongestItem;
     }
 
+    [HttpGet("GetItems")]
+    public IEnumerable<RaftItem> GetItems(string keyword){
+       return logHandler.GetItemsFromLog(FileType.NORMAL, keyword);
+    }
+
+    [HttpGet("GetItem")]
+    public RaftItem GetItem(string keyword)
+    {
+        return logHandler.GetItemFromLog(FileType.NORMAL, keyword);
+    }
+
+    [HttpGet("GetLeader")]
+    public string GetLeader()
+    {
+        return node.CurrentLeader;
+    }
+
     [HttpPost("SaveItem")]
-    public async Task SaveItem(int term, string nodeID, object command)
+    public async Task SaveItem(int term, string nodeID, string command)
     {
         if (node.IsLeader)
         {
@@ -91,7 +109,7 @@ public class RaftController : Controller
 
     }
 
-    private async Task ForwardSaveItem(int term, string nodeID, object command)
+    private async Task ForwardSaveItem(int term, string nodeID, string command)
     {
         try
         {
@@ -110,7 +128,7 @@ public class RaftController : Controller
     }
 
     [HttpPost("UpdateLog")]
-    public void UpdateLog(int term, string nodeID, object command)
+    public void UpdateLog(int term, string nodeID, string command)
     {
         logHandler.AppendLogEntry(term, nodeID, command, FileType.NORMAL);
     }

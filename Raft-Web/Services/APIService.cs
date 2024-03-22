@@ -1,36 +1,35 @@
-﻿using System.Net.Http.Json;
+﻿using RaftShared;
+using System;
+using System.Net.Http.Json;
 
-namespace Services.Services;
+namespace Services;
 
 public class APIService
 {
     private readonly HttpClient client;
 
-    public APIService(HttpClient client)
+    public APIService(string gateway)
     {
-        this.client = client;
+        client = new HttpClient { BaseAddress = new Uri(gateway) };
     }
 
-    public async Task AddMoney(string name, decimal amount)
+    public async Task<List<RaftItem>> GetItems(string keyword)
     {
-        (string, decimal) usernameBalance = new(name, amount);
-        await client.PostAsJsonAsync($"Gateway/Add", usernameBalance);
+        return await client.GetFromJsonAsync<List<RaftItem>>($"Gateway/GetItems?keyword={keyword}");
     }
 
-    public async Task<decimal> ViewBalance(string name)
+    public async Task<RaftItem> GetItem(string keyword)
     {
-        return await client.GetFromJsonAsync<decimal>($"Gateway/Get?key={name}");
+        return await client.GetFromJsonAsync<RaftItem>($"Gateway/GetItem?keyword={keyword}");
     }
 
-    public async Task AddProduct(string name, int numItems)
+    public async Task<RaftItem> StrongGetItem(string keyword)
     {
-        (string, int) usernameBalance = new(name, numItems);
-        await client.PostAsJsonAsync($"Gateway/Add", usernameBalance);
+        return await client.GetFromJsonAsync<RaftItem>($"Gateway/StrongGetItem?keyword={keyword}");
     }
 
-    public async Task UpdateProduct(string name, int numItems)
+    public async Task SaveItem(RaftItem item)
     {
-        (string, int) usernameBalance = new(name, numItems);
-        await client.PostAsJsonAsync($"Gateway/Add", usernameBalance);
+        await client.PostAsJsonAsync("Gateway/SaveItem", item);
     }
 }

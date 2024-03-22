@@ -98,3 +98,15 @@ services:
     - node-3-logs:/app/RaftLogs
     networks:
       - zack-raft
+
+  zack-raft-web:
+    container_name: "zack-web"
+    build:
+      context: ..
+      dockerfile: ./Raft-Web/Dockerfile
+      args:
+        GATEWAY_URL_ARG: "http://localhost:1400"
+    ports:
+      - 1404:80
+    networks:
+      - zack-raft

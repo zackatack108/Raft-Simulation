@@ -1,4 +1,4 @@
-﻿using System.Security.AccessControl;
+﻿using RaftShared;
 using System.Text.Json;
 
 namespace Node_API.Util;
@@ -12,7 +12,7 @@ public class RaftLogEntry
 {
     public int Term { get; set; }
     public string NodeID { get; set; }
-    public object Command { get; set; }
+    public string Command { get; set; }
 }
 
 public class LogHandler
@@ -72,7 +72,7 @@ public class LogHandler
         }
     }
 
-    public void AppendLogEntry(int term, string nodeID, object command, FileType fileType)
+    public void AppendLogEntry(int term, string nodeID, string command, FileType fileType)
     {
         try
         {
@@ -130,6 +130,58 @@ public class LogHandler
         }
         return logs.FirstOrDefault(log => log.NodeID == nodeID);
 
+    }
+
+    public List<RaftItem> GetItemsFromLog(FileType fileType, string keyword)
+    {
+        List<RaftItem> items = new();
+        try
+        {
+            List<RaftLogEntry> logs = ReadLogs(fileType);
+
+            foreach(var log in logs)
+            {
+                if(log.Command.StartsWith(keyword + " "))
+                {
+                    string[] parts = log.Command.Substring(keyword.Length + 1).Split(':');
+                    if(parts.Length >= 2)
+                    {
+                        items.Add(new RaftItem { Key = parts[0].Trim(), Value = parts[1].Trim() });
+                    }
+                }
+            }
+        }
+        catch(Exception e)
+        {
+            logger.LogError($"Failed to get items from logs: {e.Message}");
+        }
+        return items;
+    }
+
+    public RaftItem GetItemFromLog(FileType fileType, string keyword)
+    {
+        RaftItem item = new();
+        try
+        {
+            List<RaftLogEntry> logs = ReadLogs(fileType);
+
+            foreach (var log in logs)
+            {
+                if (log.Command.StartsWith(keyword + " "))
+                {
+                    string[] parts = log.Command.Substring(keyword.Length + 1).Split(':');
+                    if (parts.Length >= 2)
+                    {
+                        item = new RaftItem { Key = parts[0].Trim(), Value = parts[1].Trim() };
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            logger.LogError($"Failed to get items from logs: {e.Message}");
+        }
+        return item;
     }
 
     public void TruncateLogs(int term, string nodeID, FileType fileType)

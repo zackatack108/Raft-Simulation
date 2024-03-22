@@ -1,0 +1,42 @@
+﻿@page "/Processing"
+@using RaftShared
+@using Services
+
+<PageTitle>Processing</PageTitle>
+
+<h3>Pending Orders</h3>
+@foreach (var order in pendingOrders)
+{
+    <div>
+        <p><strong>Order ID:</strong> @order.Key.Split(' ')[1]</p>
+        <p><strong>Status:</strong> @order.Value.ToString()</p>
+        <p><strong>Info:</strong> @GetOrderInfo(order.Key.Split(' ')[1])</p> 
+        <button @onclick="() => ProcessOrder(order.Key.Split(' ')[1])">Process</button>
+    </div>
+}
+
+@code {
+    private List<RaftItem> pendingOrders = new List<RaftItem>();
+    private APIService apiService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var returnedOrders = await apiService.GetItems("order-status");
+        pendingOrders = returnedOrders.Where(item => item.Value.ToString() == "pending").ToList();
+    }
+
+    private async Task<string> GetOrderInfo(string orderId)
+    {
+        var orderInfoItem = await apiService.GetItem($"order-info-{orderId} ");
+        if (orderInfoItem != null)
+        {
+            return orderInfoItem.Value.ToString();
+        }
+        return "N/A";
+    }
+
+    private async Task ProcessOrder(string orderId)
+    {
+        pendingOrders.RemoveAll(order => order.Key.EndsWith(orderId));
+    }
+}

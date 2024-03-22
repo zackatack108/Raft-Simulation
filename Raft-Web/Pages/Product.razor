@@ -1,7 +1,63 @@
 ﻿@page "/Product"
+@using RaftShared
+@using Services
 
 <PageTitle>Product</PageTitle>
 
-@code {
+<h3>Add New Product</h3>
+<form @onsubmit="AddProduct">
+    <label for="productName">Product Name:</label>
+    <input type="text" id="productName" @bind="newProductName" />
 
+    <label for="quantity">Quantity:</label>
+    <input type="number" id="quantity" @bind="newProductQuantity" />
+
+    <button type="submit">Add Product</button>
+</form>
+
+<h3>Update Product Inventory</h3>
+@foreach (var product in products)
+{
+    <div>
+        <span>@product</span>
+        <input type="number" @bind="productQuantities[products.IndexOf(product)]" />
+        <button @onclick="() => UpdateProductInventory(product, productQuantities[products.IndexOf(product)])">Update</button>
+    </div>
+}
+
+@code {
+    private List<string> products = new List<string>();
+    private List<int> productQuantities = new List<int>();
+    private string newProductName;
+    private int newProductQuantity;
+    private APIService apiService;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var existingProducts = await apiService.GetItems("stock-of");
+        products = existingProducts.Select(item => item.Key.Split(' ')[1]).ToList();
+        productQuantities = existingProducts.Select(item => (int)item.Value).ToList();
+    }
+
+    private async Task AddProduct()
+    {
+        if (!string.IsNullOrEmpty(newProductName) && newProductQuantity > 0)
+        {
+            string newProductKey = $"stock-of {newProductName}";
+            var newProduct = new RaftItem { Key = newProductKey, Value = newProductQuantity };
+            await apiService.SaveItem(newProduct);
+            products.Add(newProductName);
+            productQuantities.Add(newProductQuantity);
+
+            newProductName = string.Empty;
+            newProductQuantity = 0;
+        }
+    }
+
+    private async Task UpdateProductInventory(string productName, int quantity)
+    {
+        string productKey = $"stock-of {productName}";
+        var existingProduct = new RaftItem { Key = productKey, Value = quantity };
+        await apiService.SaveItem(existingProduct);
+    }
 }

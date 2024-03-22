@@ -1,0 +1,77 @@
+﻿@page "/Orders"
+@using RaftShared
+@using Services
+@inject APIService APIService
+
+<PageTitle>Orders</PageTitle>
+
+<div class="row">
+    <div class="col">
+        <h4>Product</h4>
+        @foreach (var item in items)
+        {
+            <div>
+                <input type="checkbox" @onchange="e => ToggleItemSelection(item)" checked="@selectedItems.Contains(item)"/> @item
+            </div>
+        }
+    </div>
+
+    <div class="col">
+        <h4>Cart</h4>
+        @foreach(var selectedItem in selectedItems)
+        {
+            <p>@selectedItem</p>
+        }
+    </div>
+</div>
+
+<div>
+    <div class="d-flex">
+        <label class ="fs-3" for="name">Name</label>
+        <InputText class="mx-2" id="name" @bind-Value="name" />
+    </div>
+    <button class="btn btn-primary mx-4">Checkout</button>
+</div>
+
+
+
+@code {
+    List<string> items = new();
+    List<string> selectedItems = new();
+    string name;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var returnedItems = await APIService.GetItems("stock-of");
+        items = returnedItems.Select(GetItemName).ToList();
+    }
+
+    private string GetItemName(RaftItem item)
+    {
+        string[] parts = item.Key.Split(' ');
+        if(parts.Length > 1 && parts[0] == "stock-of")
+        {
+            return parts[1];
+        }
+        return item.Key;
+    }
+
+    private void ToggleItemSelection(string item)
+    {
+        if (!selectedItems.Contains(item))
+            selectedItems.Add(item);
+        else
+            selectedItems.Remove(item);
+    }
+
+    private async Task Checkout()
+    {
+        Guid orderID = new();
+
+        RaftItem orderInfo = new RaftItem { Key = $"order-info-{orderID} ", Value = $"purchaser: {name} product: {selectedItems}" };
+        RaftItem orderStatus = new RaftItem { Key = $"order-status {orderID}", Value = "pending" };
+
+        await APIService.SaveItem(orderInfo);
+        await APIService.SaveItem(orderStatus);
+    }
+}

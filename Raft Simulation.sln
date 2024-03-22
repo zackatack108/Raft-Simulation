@@ -16,7 +16,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gateway-API", "Gateway-API\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gateway-API-Tests", "Gateway-API-Tests\Gateway-API-Tests.csproj", "{1BA8F70F-905D-418B-87F1-6F9CFD0EE86F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raft-Web", "Raft-Web\Raft-Web.csproj", "{FC5E61F6-E816-409A-94D0-5C0B611158FB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Raft-Web", "Raft-Web\Raft-Web.csproj", "{FC5E61F6-E816-409A-94D0-5C0B611158FB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Raft-Shared", "Raft-Shared\Raft-Shared.csproj", "{42070C67-F170-440D-8F9A-EED43696E603}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +50,10 @@ Global
 		{FC5E61F6-E816-409A-94D0-5C0B611158FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FC5E61F6-E816-409A-94D0-5C0B611158FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FC5E61F6-E816-409A-94D0-5C0B611158FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42070C67-F170-440D-8F9A-EED43696E603}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42070C67-F170-440D-8F9A-EED43696E603}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42070C67-F170-440D-8F9A-EED43696E603}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42070C67-F170-440D-8F9A-EED43696E603}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

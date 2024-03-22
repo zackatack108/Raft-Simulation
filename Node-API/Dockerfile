@@ -11,6 +11,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Node-API/Node-API.csproj", "Node-API/"]
+RUN pwd
+COPY ["../Raft-Shared/Raft-Shared.csproj", "Raft-Shared/"]
 RUN dotnet restore "./Node-API/./Node-API.csproj"
 COPY . .
 WORKDIR "/src/Node-API"

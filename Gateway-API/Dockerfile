@@ -8,6 +8,8 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Gateway-API/Gateway-API.csproj", "Gateway-API/"]
+RUN pwd
+COPY ["../Raft-Shared/Raft-Shared.csproj", "Raft-Shared/"]
 RUN dotnet restore "./Gateway-API/./Gateway-API.csproj"
 COPY . .
 WORKDIR "/src/Gateway-API"
