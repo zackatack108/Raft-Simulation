@@ -12,6 +12,8 @@ public class Node
     public string CurrentLeader { get; set; } = "None";
     public int VoteCount { get; set; } = 0;
     public int CurrentTerm { get; set; } = 0;
+    public int LastIndexSent { get; set; } = 0;
+    public int LastLogCount { get; set; } = 0;
     public DateTime LastHeartbeatTime { get; set; }
 
     public Node(IConfiguration configuration)

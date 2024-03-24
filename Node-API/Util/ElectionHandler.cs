@@ -1,4 +1,6 @@
-﻿namespace Node_API.Util;
+﻿using RaftShared;
+
+namespace Node_API.Util;
 
 public class ElectionHandler
 {
@@ -53,23 +55,22 @@ public class ElectionHandler
     public void CheckElection()
     {
         int votesNeeded = (node.TotalNodes() / 2) + 1;
-        string message = "";
+        RaftItem message = new RaftItem { Key = $"term-{node.CurrentTerm}-elected", Value = false};
         if(node.VoteCount >= votesNeeded)
         {
             node.CurrentLeader = node.ThisNode();
             node.IsLeader = true;
             node.IsCandidate = false;
             node.IsFollower = false;
-            message = "Elected";
+            message.Value = true;
         }
         else
         {
             node.IsLeader = false;
             node.IsCandidate = false;
             node.IsFollower = true;
-            message = $"Not Elected";
         }
-        logger.LogInformation(message);
+        logger.LogInformation($"{message.Key}: {message.Value}");
         logHandler.AppendLogEntry(node.CurrentTerm, node.ThisNode(), message, FileType.ERROR);
     }
 

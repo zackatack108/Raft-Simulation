@@ -220,9 +220,9 @@ public class GatewayController : Controller
     [HttpPost("SaveItem")]
     public async Task<IActionResult> SaveItemToLeader([FromBody] RaftItem item)
     {
+        string leaderNode = await GetLeaderNode();
         try
         {
-            string leaderNode = await GetLeaderNode();
 
             if (string.IsNullOrEmpty(leaderNode))
             {
@@ -230,7 +230,7 @@ public class GatewayController : Controller
                 return StatusCode(StatusCodes.Status500InternalServerError, "No leader node found.");
             }
 
-            string uri = $"http://{leaderNode}/Gateway/SaveItem";
+            string uri = $"http://{leaderNode}/Raft/SaveItem";
 
             using (HttpClient client = new HttpClient())
             {
@@ -246,7 +246,7 @@ public class GatewayController : Controller
         }
         catch (Exception ex)
         {
-            logger.LogError($"Error saving item to leader node: {ex.Message}");
+            logger.LogError($"Error saving item to leader node {leaderNode}: {ex.Message}");
             return StatusCode(StatusCodes.Status500InternalServerError, "Error saving item to leader node.");
         }
     }

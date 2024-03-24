@@ -10,9 +10,9 @@ public enum FileType
 
 public class RaftLogEntry
 {
-    public int Term { get; set; }
-    public string NodeID { get; set; }
-    public string Command { get; set; }
+    public required int Term { get; set; }
+    public required string NodeID { get; set; }
+    public required RaftItem Item { get; set; }
 }
 
 public class LogHandler
@@ -21,7 +21,6 @@ public class LogHandler
     private readonly string electionLogFile = "ElectionsLog.json";
     private readonly string normalLogFile = "Log.json";
     private readonly ILogger<LogHandler> logger;
-
     public LogHandler(ILogger<LogHandler> logger)
     {
         this.logger = logger;
@@ -72,13 +71,13 @@ public class LogHandler
         }
     }
 
-    public void AppendLogEntry(int term, string nodeID, string command, FileType fileType)
+    public void AppendLogEntry(int term, string nodeID, RaftItem item, FileType fileType)
     {
         try
         {
             string file = GetFileType(fileType);
 
-            var logEntry = new RaftLogEntry { Term = term, NodeID = nodeID, Command = command };
+            var logEntry = new RaftLogEntry { Term = term, NodeID = nodeID, Item = item };
 
             List<RaftLogEntry> existingLogs = ReadLogs(fileType);
 
@@ -139,16 +138,35 @@ public class LogHandler
         {
             List<RaftLogEntry> logs = ReadLogs(fileType);
 
-            foreach(var log in logs)
+            Dictionary<string, RaftLogEntry> latestStates = new();
+
+            for(int i = logs.Count -1; i >= 0; i--)
             {
-                if(log.Command.StartsWith(keyword + " "))
+                var log = logs[i];
+                if(log.Item.Key.StartsWith(keyword + " "))
                 {
-                    string[] parts = log.Command.Substring(keyword.Length + 1).Split(':');
+                    string[] parts = log.Item.Key.Substring(keyword.Length + 1).Split(':');
                     if(parts.Length >= 2)
                     {
-                        items.Add(new RaftItem { Key = parts[0].Trim(), Value = parts[1].Trim() });
+                        string entity = parts[0].Trim();
+                        string value = parts[1].Trim();
+
+                        if(!latestStates.ContainsKey(entity) || log.Term > latestStates[entity].Term)
+                        {
+                            latestStates[entity] = log;
+                        }
+                        else if(log.Term == latestStates[entity].Term && log.NodeID.CompareTo(latestStates[entity].NodeID) > 0)
+                        {
+                            latestStates[entity] = log;
+                        }
+
                     }
                 }
+            }
+
+            foreach(var kvp in latestStates)
+            {
+                items.Add(new RaftItem { Key = kvp.Key, Value = kvp.Value.Item.Value });
             }
         }
         catch(Exception e)
@@ -164,16 +182,38 @@ public class LogHandler
         try
         {
             List<RaftLogEntry> logs = ReadLogs(fileType);
+            Dictionary<string, RaftLogEntry> latestStates = new();
 
-            foreach (var log in logs)
+            for (int i = logs.Count - 1; i >= 0; i--)
             {
-                if (log.Command.StartsWith(keyword + " "))
+                var log = logs[i];
+                if (log.Item.Key.StartsWith(keyword + " "))
                 {
-                    string[] parts = log.Command.Substring(keyword.Length + 1).Split(':');
+                    string[] parts = log.Item.Key.Substring(keyword.Length + 1).Split(':');
                     if (parts.Length >= 2)
                     {
-                        item = new RaftItem { Key = parts[0].Trim(), Value = parts[1].Trim() };
+                        string entity = parts[0].Trim();
+                        string value = parts[1].Trim();
+
+                        if (!latestStates.ContainsKey(entity) || log.Term > latestStates[entity].Term)
+                        {
+                            latestStates[entity] = log;
+                        }
+                        else if (log.Term == latestStates[entity].Term && log.NodeID.CompareTo(latestStates[entity].NodeID) > 0)
+                        {
+                            latestStates[entity] = log;
+                        }
+
                     }
+                }
+            }
+
+            foreach (var kvp in latestStates)
+            {
+                if(kvp.Key == keyword)
+                {
+                    item = new RaftItem { Key = kvp.Key, Value = kvp.Value.Item.Value };
+                    break;
                 }
             }
         }
@@ -194,6 +234,26 @@ public class LogHandler
         string updateJsonString = JsonSerializer.Serialize(logs);
 
         File.WriteAllText(Path.Combine(baseDirectory, file), updateJsonString);
+    }
+
+    public List<RaftItem> GetLatestLogEntries(FileType fileType, int LastIndexSent)
+    {
+        List<RaftLogEntry> logs = ReadLogs(fileType);
+        int logCount = logs.Count;
+
+        if(LastIndexSent >= logs.Count)
+        {
+            return new();
+        }
+
+        if(LastIndexSent == 0)
+        {
+            return logs.Select(log => log.Item).ToList();
+        }
+
+        int entriesToInclude = logCount - LastIndexSent;
+
+        return logs.GetRange(LastIndexSent, entriesToInclude).Select(log => log.Item).ToList();
     }
 
     public int GetLastLogIndex(FileType fileType)

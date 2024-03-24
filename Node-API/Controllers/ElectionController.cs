@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Node_API.Util;
+using RaftShared;
 
 namespace Node_API.Controllers;
 
@@ -26,8 +27,8 @@ public class ElectionController : Controller
     {
         bool vote = false;
         string message = $"Node: {node.ThisNode()}, Didn't vote for: {candidate}, Term: {term}";
-        string logMessage = $"Didn't vote {candidate}";
-        if(term > node.CurrentTerm)
+        RaftItem logMessage = new RaftItem { Key = $"term-{term}-vote {candidate}", Value = false };
+        if(term > node.CurrentTerm || node.CurrentLeader == "None")
         {
             node.CurrentTerm = term;
             string voteMessage = $"Node: {node.ThisNode()}, Voted for node: {candidate}, Term: {term}";
@@ -42,7 +43,7 @@ public class ElectionController : Controller
                 {
                     vote = true;
                     message = voteMessage;
-                    logMessage = $"Voted {candidate}";
+                    logMessage.Value = true;
                 }
             }
         }

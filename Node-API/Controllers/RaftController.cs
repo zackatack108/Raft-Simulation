@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Node_API.Util;
 using RaftShared;
+using System.Text.Json;
+using System.Text;
 
 namespace Node_API.Controllers;
 
@@ -96,29 +98,31 @@ public class RaftController : Controller
     }
 
     [HttpPost("SaveItem")]
-    public async Task SaveItem(int term, string nodeID, string command)
+    public async Task SaveItem([FromBody] RaftItem item)
     {
         if (node.IsLeader)
         {
-            logHandler.AppendLogEntry(term, nodeID, command, FileType.NORMAL);
+            logHandler.AppendLogEntry(node.CurrentTerm, node.ThisNode(), item, FileType.NORMAL);
         }
         else
         {
-            await ForwardSaveItem(term, nodeID, command);
+            await ForwardSaveItem(item);
         }
 
     }
 
-    private async Task ForwardSaveItem(int term, string nodeID, string command)
+    private async Task ForwardSaveItem(RaftItem item)
     {
         try
         {
+            string uri = $"http://{node.CurrentLeader}/Raft/SaveItem";
+
             using (HttpClient client = new HttpClient())
             {
-                string uri = $"http://{node.CurrentLeader}/Raft/SaveItem?term={term}&nodeID={nodeID}&command={command}";
-                client.BaseAddress = new Uri(uri);
+                string jsonItem = JsonSerializer.Serialize(item);
+                HttpContent content = new StringContent(jsonItem, Encoding.UTF8, "application/json");
 
-                HttpResponseMessage response = await client.PostAsync("", null);
+                HttpResponseMessage response = await client.PostAsync(uri, content);
                 response.EnsureSuccessStatusCode();
             }
         }
@@ -128,9 +132,18 @@ public class RaftController : Controller
     }
 
     [HttpPost("UpdateLog")]
-    public void UpdateLog(int term, string nodeID, string command)
+    public void UpdateLog([FromBody] List<RaftItem> items)
     {
-        logHandler.AppendLogEntry(term, nodeID, command, FileType.NORMAL);
+        if(items.Count == 0)
+        {
+            return;
+        }
+
+        foreach(var item in items)
+        {
+            logHandler.AppendLogEntry(node.CurrentTerm, node.ThisNode(), item, FileType.NORMAL);
+        }
+
     }
 
     [HttpPost("HeartBeat")]
